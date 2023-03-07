@@ -69,6 +69,7 @@ struct serial_s {
   UART_HandleTypeDef handle;
   void (*rx_callback)(serial_t *);
   int (*tx_callback)(serial_t *);
+  void (*error_callback)(UART_HandleTypeDef *);
   PinName pin_tx;
   PinName pin_rx;
   PinName pin_rts;
@@ -87,15 +88,6 @@ struct serial_s {
 
 /* Exported constants --------------------------------------------------------*/
 #define TX_TIMEOUT  1000
-
-#if !defined(RCC_USART1CLKSOURCE_HSI)
-/* Some series like C0 have 2 derivated clock from HSI: HSIKER (for peripherals)
- * and HSISYS (for system clock). But each have a dedicated prescaler.
- * To avoid changing Arduino implementation,
- * remap RCC_USART1CLKSOURCE_HSI to RCC_USART1CLKSOURCE_HSIKER
- */
-#define RCC_USART1CLKSOURCE_HSI RCC_USART1CLKSOURCE_HSIKER
-#endif
 
 #if defined(USART2_BASE) && !defined(USART2_IRQn)
 #if defined(STM32G0xx)
@@ -239,6 +231,7 @@ void uart_config_lowpower(serial_t *obj);
 #endif
 int uart_getc(serial_t *obj, unsigned char *c);
 void uart_attach_rx_callback(serial_t *obj, void (*callback)(serial_t *));
+void uart_attach_error_callback(UART_HandleTypeDef *obj, void (*callback)(UART_HandleTypeDef *));
 void uart_attach_tx_callback(serial_t *obj, int (*callback)(serial_t *), size_t size);
 
 uint8_t serial_tx_active(serial_t *obj);

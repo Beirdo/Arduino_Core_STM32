@@ -798,6 +798,35 @@ int uart_getc(serial_t *obj, unsigned char *c)
  * @param callback : function call at the end of reception
  * @retval none
  */
+void uart_attach_error_callback(UART_HandleTypeDef *huart, void (*callback)(UART_HandleTypeDef *))
+{
+  serial_t *obj = get_serial_obj(huart);
+  if (obj == NULL) {
+    return;
+  }
+
+  /* Exit if a reception is already on-going */
+  if (serial_rx_active(obj)) {
+    return;
+  }
+  obj->error_callback = callback;
+
+  /* Must disable interrupt to prevent handle lock contention */
+  HAL_NVIC_DisableIRQ(obj->irq);
+
+  HAL_UART_Receive_IT(uart_handlers[obj->index], &(obj->recv), 1);
+
+  /* Enable interrupt */
+  HAL_NVIC_EnableIRQ(obj->irq);
+}
+
+/**
+ * Begin asynchronous RX transfer (enable interrupt for data collecting)
+ *
+ * @param obj : pointer to serial_t structure
+ * @param callback : function call at the end of reception
+ * @retval none
+ */
 void uart_attach_rx_callback(serial_t *obj, void (*callback)(serial_t *))
 {
   if (obj == NULL) {
@@ -925,6 +954,11 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
   */
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {
+  serial_t *obj = get_serial_obj(huart);
+  if (obj) {
+    obj->error_callback(huart);
+  }
+
 #if defined(STM32F1xx) || defined(STM32F2xx) || defined(STM32F4xx) || defined(STM32L1xx)
   if (__HAL_UART_GET_FLAG(huart, UART_FLAG_PE) != RESET) {
     __HAL_UART_CLEAR_PEFLAG(huart); /* Clear PE flag */
@@ -947,7 +981,6 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
   }
 #endif
   /* Restart receive interrupt after any error */
-  serial_t *obj = get_serial_obj(huart);
   if (obj && !serial_rx_active(obj)) {
     HAL_UART_Receive_IT(huart, &(obj->recv), 1);
   }

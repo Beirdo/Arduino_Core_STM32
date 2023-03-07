@@ -410,6 +410,7 @@ size_t Print::printFloat(double number, uint8_t digits)
 {
   size_t n = 0;
 
+#ifndef DISABLE_PRINT_FLOAT
   if (isnan(number)) {
     return print("nan");
   }
@@ -454,6 +455,7 @@ size_t Print::printFloat(double number, uint8_t digits)
     n += print(toPrint);
     remainder -= toPrint;
   }
+#endif
 
   return n;
 }

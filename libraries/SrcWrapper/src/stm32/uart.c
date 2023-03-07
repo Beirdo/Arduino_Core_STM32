@@ -955,7 +955,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {
   serial_t *obj = get_serial_obj(huart);
-  if (obj) {
+  if (obj && obj->error_callback) {
     obj->error_callback(huart);
   }
 

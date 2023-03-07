@@ -261,30 +261,46 @@ extern "C" {
 
 int Print::printf(const char *format, ...)
 {
+#ifndef DISABLE_VPRINTF
   va_list ap;
   va_start(ap, format);
   int retval = vdprintf((int)this, format, ap);
   va_end(ap);
   return retval;
+#else
+  return 0;
+#endif
 }
 
 int Print::printf(const __FlashStringHelper *format, ...)
 {
+#ifndef DISABLE_VPRINTF
   va_list ap;
   va_start(ap, format);
   int retval = vdprintf((int)this, (const char *)format, ap);
   va_end(ap);
   return retval;
+#else
+  return 0;
+#endif
 }
 
 int Print::vprintf(const char *format, va_list ap)
 {
+#ifndef DISABLE_VPRINTF
   return vdprintf((int)this, format, ap);
+#else
+  return 0;
+#endif
 }
 
 int Print::vprintf(const __FlashStringHelper *format, va_list ap)
 {
+#ifndef DISABLE_VPRINTF
   return vdprintf((int)this, (const char *)format, ap);
+#else
+  return 0;
+#endif
 }
 
 
